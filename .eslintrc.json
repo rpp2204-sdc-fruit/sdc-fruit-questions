@@ -1,0 +1,25 @@
+{
+    "env": {
+        "jest/globals": true
+    },
+    "extends": [
+        "airbnb",
+        "prettier",
+        "plugin:jest/recommended"
+    ],
+    "plugins": [
+        "prettier",
+        "jest"
+    ],
+    "rules": {
+        "no-plusplus": "off",
+        "spaced-comment":"off",
+        "react/prop-types": "off",
+        "camelcase": "off",
+        "import/extensions": "off",
+        "react/button-has-type": "off",
+        "prettier/prettier": "error",
+        "no-unused-vars": "warn",
+        "no-console": "off"
+    }
+}
