@@ -3,7 +3,8 @@ const axios = require('axios');
 const e = require('express');
 const { uploadToCloudinary } = require('./uploadToCloudinary');
 
-const { URL, TOKEN } = process.env;
+const { TOKEN } = process.env;
+const URL = 'http://127.0.0.1:3002';
 
 // only have to take care of one request here
 // client will be in charge of sending mutiple requests
@@ -14,7 +15,7 @@ const getQuestions = (req, res, next) => {
   const count = 100;
 
   function get(page) {
-    const url = `${URL}/qa/questions?product_id=${product_id}&page=${page}&count=${count}`;
+    const url = `${URL}/questions?product_id=${product_id}&page=${page}&count=${count}`;
 
     const options = {
       headers: { Authorization: TOKEN },
@@ -41,7 +42,7 @@ const getQuestions = (req, res, next) => {
 const getAnswers = (req, res, next) => {
   const { question_id, page, count } = req.params;
 
-  const url = `${URL}/qa/questions/${question_id}/answers?page=${page}&count=${count}`;
+  const url = `${URL}/questions/${question_id}/answers?page=${page}&count=${count}`;
 
   const options = {
     headers: { Authorization: TOKEN },
@@ -58,7 +59,7 @@ const getAnswers = (req, res, next) => {
 };
 
 const addQuestion = (req, res, next) => {
-  const url = `${URL}/qa/questions`;
+  const url = `${URL}/questions`;
 
   const { body, name, email, product_id } = req.body;
 
@@ -92,7 +93,7 @@ const addAnswer = (req, res, next) => {
   const { question_id } = req.params;
   const { body, name, email, photoUrls } = req.body;
 
-  const url = `${URL}/qa/questions/${question_id}/answers`;
+  const url = `${URL}/questions/${question_id}/answers`;
 
   const data = JSON.stringify({
     body,
@@ -123,7 +124,7 @@ const addAnswer = (req, res, next) => {
 const markQuestionAsHelpful = (req, res, next) => {
   const { question_id } = req.params;
 
-  const url = `${URL}/qa/questions/${question_id}/helpful`;
+  const url = `${URL}/questions/${question_id}/helpful`;
 
   console.log(question_id, url);
 
@@ -145,7 +146,7 @@ const markQuestionAsHelpful = (req, res, next) => {
 const markAnswerAsHelpful = (req, res, next) => {
   const { answer_id } = req.params;
 
-  const url = `${URL}/qa/answers/${answer_id}/helpful`;
+  const url = `${URL}/answers/${answer_id}/helpful`;
 
   const options = {
     method: 'put',
@@ -165,7 +166,7 @@ const markAnswerAsHelpful = (req, res, next) => {
 const reportAnswer = (req, res, next) => {
   const { answer_id } = req.params;
 
-  const url = `${URL}/qa/answers/${answer_id}/report`;
+  const url = `${URL}/answers/${answer_id}/report`;
 
   const options = {
     method: 'put',

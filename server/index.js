@@ -44,7 +44,7 @@ app.use('/', (req, res, next) => {
 
 // Question List;
 app.get('/questions/:product_id/', getQuestions, (req, res) => {
-  console.log('questions: ', res.body);
+  // console.log('questions: ', res.body);
   res.status(200).send(res.body);
 });
 

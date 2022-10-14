@@ -8,10 +8,12 @@
     "test Q&A": "jest ./_tests_/questions-answers.test.jsx",
     "test Overview": "jest ./_tests_/Overview.test.js",
     "test-reviews": "jest ./_tests_/reviewsModule.test.js",
+    "test questions-service": "jest ./_tests_/SDC-questions-service.test.jsx",
     "coverage": "jest --coverage",
     "start": "node server/index.js",
     "build": "webpack --mode production",
     "server-dev": "nodemon --watch server server/index.js",
+    "questions-service-dev": "nodemon --watch server server/questionsservice/index.js",
     "client-dev": "npx webpack --watch --mode development"
   },
   "repository": {
@@ -49,6 +51,7 @@
     "js-image-zoom": "^0.7.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
+    "mongoose": "^6.6.5",
     "npm": "^8.17.0",
     "qs": "^6.11.0",
     "react": "^18.2.0",
