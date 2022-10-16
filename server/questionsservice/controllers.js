@@ -1,26 +1,25 @@
 const { ProductQuestion } = require('./db');
 
 let lastQuestion_id;
-let lastAnswer_id; //TO DO
+let lastAnswer_id;
 ProductQuestion.find({}).sort({'questions.question_id':-1}).limit(1).exec((err, doc) => {
     const { questions } = doc[0];
     lastQuestion_id = questions[questions.length - 1].question_id;
   });
-// ProductQuestion.find({}).sort({'questions.answers.answer_id':-1}).limit(1).exec((err, doc) => {
-//     if (err) {
-//       console.log('Error finding last answer:', err);
-//     }
-//     const { questions } = doc[0];
-//     questions.forEach((question) => {
-//       const { answers } = question;
-//       console.log(answers);
-//       // Object.keys(answers.toObject()).forEach((answer) => {
-//       //   if (answer.answer_id > lastAnswer_id || lastAnswer_id === null) {
-//       //     lastAnswer_id = answer.answer_id;
-//       //   }
-//       // });
-//     });
-//   });
+ProductQuestion.find({}).sort({'questions.answers.answer_id':-1}).limit(1).exec((err, doc) => {
+    if (err) {
+      console.log('Error finding last answer:', err);
+    }
+    const { questions } = doc[0];
+    questions.forEach((question) => {
+      const { answers } = question;
+      Array.from(answers.keys()).forEach((answer_id) => {
+        if (Number(answer_id) > lastAnswer_id || lastAnswer_id === undefined) {
+          lastAnswer_id = Number(answer_id);
+        }
+      });
+    });
+  });
 module.exports = {
   getQuestions(product_id, page = 1, count = 5, cb) {
     const returnDoc = {
@@ -45,18 +44,20 @@ module.exports = {
             reported: doc.questions[i].reported,
             answers: {},
           };
-          doc.questions[i].answers.forEach((answer, answer_id) => {
-            if (!answer.reported) {
-              returnQuestion.answers[answer_id] = {
-                id: answer.answer_id,
-                body: answer.body,
-                date: answer.date,
-                answerer_name: answer.answerer_name,
-                helpfulness: answer.helpfulness,
-                photos: answer.photos,
-              };
-            }
-          });
+          if (doc.questions[i].answers) {
+            Array.from(doc.questions[i].answers.values()).forEach((answer) => {
+              if (!answer.reported) {
+                returnQuestion.answers[answer.answer_id] = {
+                  id: answer.answer_id,
+                  body: answer.body,
+                  date: answer.date,
+                  answerer_name: answer.answerer_name,
+                  helpfulness: answer.helpfulness,
+                  photos: answer.photos,
+                };
+              }
+            });
+          }
           returnDoc.results.push(returnQuestion);
         }
       }
@@ -79,7 +80,7 @@ module.exports = {
       const start = Number(page - 1) * Number(count);
       const end = Number(page - 1) * Number(count) + Number(count);
       for (let i = 0; i < doc.questions.length; i++) {
-        if (doc.questions[i].question_id === Number(question_id)) {
+        if (doc.questions[i].question_id === Number(question_id) && doc.questions[i].answers) {
           const answersSlice = Array.from(doc.questions[i].answers.values()).slice(start, end);
           answersSlice.forEach((answer) => {
             if (answer.answer_id && !answer.reported) {
@@ -110,7 +111,7 @@ module.exports = {
       reported: false,
       answers: {},
     };
-    ProductQuestion.findByIdAndUpdate(product_id, { $push: { questions: newQuestion } }, (err) => {
+    ProductQuestion.findByIdAndUpdate(product_id, { $push: { questions: newQuestion } }, (err, doc) => {
         if (err) {
           console.log('Error writing to database', err);
           cb(err);
@@ -121,7 +122,7 @@ module.exports = {
     );
   },
   postAnswer(question_id, body, name, email, photos, cb) {
-    const newAnswer_id = lastAnswer_id + 1; //TO DO
+    const newAnswer_id = lastAnswer_id + 1;
     const newAnswer = {
       answer_id: newAnswer_id,
       body,
@@ -142,14 +143,25 @@ module.exports = {
       });
     }
     const filter = { 'questions.question_id': Number(question_id) };
-    const update = { [`answers.${newAnswer_id}`]: newAnswer };
-    ProductQuestion.findOneAndUpdate(filter, update, (err) => {
+    ProductQuestion.findOne(filter, (err, doc) => {
       if (err) {
         console.log('Error writing to database', err);
         cb(err);
       }
-      lastAnswer_id++;
-      cb();
+      for (let i = 0; i < doc.questions.length; i++) {
+        if (doc.questions[i].question_id === Number(question_id)) {
+          doc.questions[i].answers.set(newAnswer_id.toString(), newAnswer);
+          doc.save()
+            .then(() => {
+              lastAnswer_id++;
+              cb(null, doc);
+            })
+            .catch((saveErr) => {
+              console.log('Error saving to database', saveErr);
+              cb(saveErr);
+            });
+        }
+      }
     });
   },
   markQuestionAsHelpful(question_id, cb) {
@@ -204,7 +216,7 @@ module.exports = {
         cb(err);
       }
       for (let i = 0; i < doc.questions.length; i++) {
-        if (doc.questions[i].answers.get(answer_id) !== undefined) {
+        if (doc.questions[i].answers && doc.questions[i].answers.get(answer_id) !== undefined) {
           const retrievedAnswer = doc.questions[i].answers.get(answer_id);
           retrievedAnswer.helpfulness += 1;
           doc.questions[i].answers.set(answer_id, retrievedAnswer);
@@ -228,7 +240,7 @@ module.exports = {
         cb(err);
       }
       for (let i = 0; i < doc.questions.length; i++) {
-        if (doc.questions[i].answers.get(answer_id) !== undefined) {
+        if (doc.questions[i].answers && doc.questions[i].answers.get(answer_id) !== undefined) {
           const retrievedAnswer = doc.questions[i].answers.get(answer_id);
           retrievedAnswer.reported = true;
           doc.questions[i].answers.set(answer_id, retrievedAnswer);
