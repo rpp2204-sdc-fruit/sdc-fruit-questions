@@ -42,7 +42,7 @@ const productQuestionSchema = new Schema(
       },
     ],
   },
-  { strict: false }
+  // { strict: false }
 );
 
 const ProductQuestion = mongoose.model('ProductQuestion', productQuestionSchema, 'productquestions');
