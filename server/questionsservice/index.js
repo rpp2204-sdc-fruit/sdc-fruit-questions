@@ -13,19 +13,22 @@ const {
 const questionsService = express();
 questionsService.use(express.json());
 
-questionsService.use('/', (req, res, next) => {
-  console.log(`${req.method} REQUEST ON ${req.url}`);
-  next();
-});
+// questionsService.use('/', (req, res, next) => {
+//   console.log(`${req.method} REQUEST ON ${req.url}`);
+//   next();
+// });
 
 // GET Question List
 questionsService.get('/questions', (req, res) => {
   const { product_id, page, count } = req.query;
   getQuestions(product_id, page, count, (err, doc) => {
     if (err) {
-      res.status(500);
+      res.status(500).send();
     }
-    res.status(200).send(doc);
+    if (doc) {
+      res.status(200).send(doc);
+    }
+    res.status(404).send();
   });
 });
 
@@ -37,7 +40,10 @@ questionsService.get('/questions/:question_id/answers', (req, res) => {
     if (err) {
       res.status(500);
     }
-    res.status(200).send(doc);
+    if (doc) {
+      res.status(200).send(doc);
+    }
+    res.status(404).send();
   });
 });
 

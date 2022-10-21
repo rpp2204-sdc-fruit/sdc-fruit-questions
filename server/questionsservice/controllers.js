@@ -5,6 +5,7 @@ let lastAnswer_id;
 ProductQuestion.find({}).sort({'questions.question_id':-1}).limit(1).exec((err, doc) => {
     const { questions } = doc[0];
     lastQuestion_id = questions[questions.length - 1].question_id;
+    console.log('lastQuestion_id', lastQuestion_id);
   });
 ProductQuestion.find({}).sort({'questions.answers.answer_id':-1}).limit(1).exec((err, doc) => {
     if (err) {
@@ -19,6 +20,7 @@ ProductQuestion.find({}).sort({'questions.answers.answer_id':-1}).limit(1).exec(
         }
       });
     });
+    console.log('lastAnswer_id', lastAnswer_id);
   });
 module.exports = {
   getQuestions(product_id, page = 1, count = 5, cb) {
@@ -31,37 +33,41 @@ module.exports = {
         console.log('Error retrieving from database:', err);
         cb(err);
       }
-      const start = Number(page - 1) * Number(count);
-      const end = Number(page - 1) * Number(count) + Number(count);
-      for (let i = start; i < end; i++) {
-        if (doc.questions[i] && !doc.questions[i].reported) {
-          const returnQuestion = {
-            question_id: doc.questions[i].question_id,
-            question_body: doc.questions[i].question_body,
-            question_date: doc.questions[i].question_date,
-            asker_name: doc.questions[i].asker_name,
-            question_helpfulness: doc.questions[i].question_helpfulness,
-            reported: doc.questions[i].reported,
-            answers: {},
-          };
-          if (doc.questions[i].answers) {
-            Array.from(doc.questions[i].answers.values()).forEach((answer) => {
-              if (!answer.reported) {
-                returnQuestion.answers[answer.answer_id] = {
-                  id: answer.answer_id,
-                  body: answer.body,
-                  date: answer.date,
-                  answerer_name: answer.answerer_name,
-                  helpfulness: answer.helpfulness,
-                  photos: answer.photos,
-                };
-              }
-            });
+      if (doc) {
+        const start = Number(page - 1) * Number(count);
+        const end = Number(page - 1) * Number(count) + Number(count);
+        for (let i = start; i < end; i++) {
+          if (doc.questions[i] && !doc.questions[i].reported) {
+            const returnQuestion = {
+              question_id: doc.questions[i].question_id,
+              question_body: doc.questions[i].question_body,
+              question_date: doc.questions[i].question_date,
+              asker_name: doc.questions[i].asker_name,
+              question_helpfulness: doc.questions[i].question_helpfulness,
+              reported: doc.questions[i].reported,
+              answers: {},
+            };
+            if (doc.questions[i].answers) {
+              Array.from(doc.questions[i].answers.values()).forEach((answer) => {
+                if (!answer.reported) {
+                  returnQuestion.answers[answer.answer_id] = {
+                    id: answer.answer_id,
+                    body: answer.body,
+                    date: answer.date,
+                    answerer_name: answer.answerer_name,
+                    helpfulness: answer.helpfulness,
+                    photos: answer.photos,
+                  };
+                }
+              });
+            }
+            returnDoc.results.push(returnQuestion);
           }
-          returnDoc.results.push(returnQuestion);
         }
+        cb(null, returnDoc);
+      } else {
+        cb(null, returnDoc);
       }
-      cb(null, returnDoc);
     });
   },
   getAnswers(question_id, page = 1, count = 5, cb) {
@@ -77,27 +83,31 @@ module.exports = {
         console.log('Error retrieving from database:', err);
         cb(err);
       }
-      const start = Number(page - 1) * Number(count);
-      const end = Number(page - 1) * Number(count) + Number(count);
-      for (let i = 0; i < doc.questions.length; i++) {
-        if (doc.questions[i].question_id === Number(question_id) && doc.questions[i].answers) {
-          const answersSlice = Array.from(doc.questions[i].answers.values()).slice(start, end);
-          answersSlice.forEach((answer) => {
-            if (answer.answer_id && !answer.reported) {
-              returnDoc.results.push({
-                answer_id: answer.answer_id,
-                body: answer.body,
-                answerer_name: answer.answerer_name,
-                photos: answer.photos,
-                date: answer.date,
-                helpfulness: answer.helpfulness,
-              });
-            }
-          });
-          break;
+      if (doc) {
+        const start = Number(page - 1) * Number(count);
+        const end = Number(page - 1) * Number(count) + Number(count);
+        for (let i = 0; i < doc.questions.length; i++) {
+          if (doc.questions[i].question_id === Number(question_id) && doc.questions[i].answers) {
+            const answersSlice = Array.from(doc.questions[i].answers.values()).slice(start, end);
+            answersSlice.forEach((answer) => {
+              if (answer.answer_id && !answer.reported) {
+                returnDoc.results.push({
+                  answer_id: answer.answer_id,
+                  body: answer.body,
+                  answerer_name: answer.answerer_name,
+                  photos: answer.photos,
+                  date: answer.date,
+                  helpfulness: answer.helpfulness,
+                });
+              }
+            });
+            break;
+          }
         }
+        cb(null, returnDoc);
+      } else {
+        cb(null, returnDoc);
       }
-      cb(null, returnDoc);
     });
   },
   postQuestion(body, name, email, product_id, cb) {
