@@ -7,8 +7,8 @@ export const options = {
       rate: 1300,
       timeUnit: '1s',
       duration: '30s',
-      preAllocatedVUs: 2500, // how large the initial pool of VUs would be
-      maxVUs: 100000, // if the preAllocatedVUs are not enough, we can initialize more
+      preAllocatedVUs: 300, // how large the initial pool of VUs would be
+      maxVUs: 500, // if the preAllocatedVUs are not enough, we can initialize more
     },
   },
 };
@@ -41,5 +41,5 @@ export default function () {
   check(res, { 'status was 200': (r) => r.status == 200 });
   check(res, { 'status was 404': (r) => r.status == 404 });
   check(res, { 'status was 500': (r) => r.status == 500 });
-  sleep(1);
+  // sleep(1);
 }
