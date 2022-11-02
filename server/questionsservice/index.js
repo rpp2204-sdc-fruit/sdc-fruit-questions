@@ -17,6 +17,11 @@ questionsService.use(express.json());
 //   console.log(`${req.method} REQUEST ON ${req.url}`);
 //   next();
 // });
+//Loader.io verification
+questionsService.get('/loaderio-09e8a0ef5159f48e231afcabf891bd88', (req, res) => {
+    res.send('loaderio-09e8a0ef5159f48e231afcabf891bd88');
+  }
+);
 
 // GET Question List
 questionsService.get('/questions', (req, res) => {
