@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const {
   getQuestions,
@@ -13,13 +14,16 @@ const {
 const questionsService = express();
 questionsService.use(express.json());
 
+//Logger
 // questionsService.use('/', (req, res, next) => {
 //   console.log(`${req.method} REQUEST ON ${req.url}`);
 //   next();
 // });
+
 //Loader.io verification
+const { LOADER } = process.env;
 questionsService.get('/loaderio-09e8a0ef5159f48e231afcabf891bd88', (req, res) => {
-    res.send('loaderio-09e8a0ef5159f48e231afcabf891bd88');
+    res.send(LOADER);
   }
 );
 

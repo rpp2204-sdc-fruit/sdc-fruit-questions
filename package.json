@@ -9,11 +9,14 @@
     "test Overview": "jest ./_tests_/Overview.test.js",
     "test-reviews": "jest ./_tests_/reviewsModule.test.js",
     "test questions-service": "jest ./_tests_/SDC-questions-service.test.jsx",
+    "stress-test": "k6 run ./_tests_/SDC-questions-service-stress-test.js",
     "coverage": "jest --coverage",
     "start": "node server/index.js",
     "build": "webpack --mode production",
     "server-dev": "nodemon --watch server server/index.js",
     "questions-service-dev": "nodemon --watch server server/questionsservice/index.js",
+    "questions-service": "node server/questionsservice/index.js",
+    "redis": "node server/questionsservice/redis.js",
     "client-dev": "npx webpack --watch --mode development"
   },
   "repository": {
@@ -59,6 +62,8 @@
     "react-image-zoom": "^1.3.1",
     "react-router-dom": "^6.4.0",
     "react-scroll": "^1.8.7",
+    "redis": "^4.4.0",
+    "redis-cli": "^2.1.2",
     "uniqid": "^5.4.0",
     "valid-url": "^1.0.9",
     "webpack": "^5.74.0",
