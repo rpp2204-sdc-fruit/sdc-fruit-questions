@@ -1,7 +1,8 @@
 const { MongoDB } = require('./mongodb');
 const { redisClient } = require('./redis');
+const { filterQuestions, filterAnswers } = require('./utilities');
 
-//CONSOLE LOGS LAST Q and LAST A ID'S, HOLDS IN MEMORY;
+//FIRST CONSOLE LOGS LAST Q and LAST A ID'S, HELD IN MEMORY
 let lastQuestion_id;
 let lastAnswer_id;
 MongoDB.find({}).sort({'questions.question_id':-1}).limit(1).exec((err, doc) => {
@@ -28,60 +29,29 @@ MongoDB.find({}).sort({'questions.question_id':-1}).limit(1).exec((err, doc) => 
 module.exports = {
   getQuestions: async (product_id, page = 1, count = 5, cb) => {
     try {
-      const cachedResults = await redisClient.get(`product_id:${product_id}`);
-      if (cachedResults) {
-        cb(null, JSON.parse(cachedResults));
+      const cachedDoc = await redisClient.get(`product_id:${product_id}page:${page}`);
+      if (cachedDoc) {
+        cb(null, JSON.parse(cachedDoc));
       } else {
-        const returnDoc = {
-          product_id,
-          results: [],
-        };
         MongoDB.findById(Number(product_id), (err, doc) => {
           if (err) {
             throw err;
           }
           if (doc) {
-            const start = Number(page - 1) * Number(count);
-            const end = Number(page - 1) * Number(count) + Number(count);
-            for (let i = start; i < end; i++) {
-              if (doc.questions[i] && !doc.questions[i].reported) {
-                const returnQuestion = {
-                  question_id: doc.questions[i].question_id,
-                  question_body: doc.questions[i].question_body,
-                  question_date: doc.questions[i].question_date,
-                  asker_name: doc.questions[i].asker_name,
-                  question_helpfulness: doc.questions[i].question_helpfulness,
-                  reported: doc.questions[i].reported,
-                  answers: {},
-                };
-                if (doc.questions[i].answers) {
-                  Array.from(doc.questions[i].answers.values()).forEach(
-                    (answer) => {
-                      if (!answer.reported) {
-                        returnQuestion.answers[answer.answer_id] = {
-                          id: answer.answer_id,
-                          body: answer.body,
-                          date: answer.date,
-                          answerer_name: answer.answerer_name,
-                          helpfulness: answer.helpfulness,
-                          photos: answer.photos,
-                        };
-                      }
-                    }
-                  );
-                }
-                returnDoc.results.push(returnQuestion);
-              }
-            }
+            const filteredDoc = filterQuestions(doc, Number(page), Number(count));
             redisClient.SETEX(
-              `product_id:${product_id}`,
+              `product_id:${product_id}page:${page}`,
               300, //Holds in cache for 5 min.
-              JSON.stringify(returnDoc)
+              JSON.stringify(filteredDoc)
             );
-            cb(null, returnDoc);
+            cb(null, filteredDoc);
           } else {
+            const returnDoc = {
+              product_id,
+              results: [],
+            };
             redisClient.SETEX(
-              `product_id:${product_id}`,
+              `product_id:${product_id}page:${page}`,
               300, //Holds in cache for 5 min.
               JSON.stringify(returnDoc)
             );
@@ -96,51 +66,32 @@ module.exports = {
   },
   getAnswers: async (question_id, page = 1, count = 5, cb) => {
     try {
-      const cachedResults = await redisClient.get(`question_id:${question_id}`);
-      if (cachedResults) {
-        cb(null, JSON.parse(cachedResults));
+      const cachedDoc = await redisClient.get(`question_id:${question_id}page:${page}`);
+      if (cachedDoc) {
+        cb(null, JSON.parse(cachedDoc));
       } else {
-        const returnDoc = {
-          question: question_id,
-          page: Number(page),
-          count: Number(count),
-          results: [],
-        };
         const filter = { 'questions.question_id': Number(question_id) };
         MongoDB.findOne(filter, (err, doc) => {
           if (err) {
             throw err;
           }
           if (doc) {
-            const start = Number(page - 1) * Number(count);
-            const end = Number(page - 1) * Number(count) + Number(count);
-            for (let i = 0; i < doc.questions.length; i++) {
-              if (doc.questions[i].question_id === Number(question_id) && doc.questions[i].answers) {
-                const answersSlice = Array.from(doc.questions[i].answers.values()).slice(start, end);
-                answersSlice.forEach((answer) => {
-                  if (answer.answer_id && !answer.reported) {
-                    returnDoc.results.push({
-                      answer_id: answer.answer_id,
-                      body: answer.body,
-                      answerer_name: answer.answerer_name,
-                      photos: answer.photos,
-                      date: answer.date,
-                      helpfulness: answer.helpfulness,
-                    });
-                  }
-                });
-                break;
-              }
-            }
+            const filteredDoc = filterAnswers(doc, question_id, Number(page), Number(count));
             redisClient.SETEX(
-              `question_id:${question_id}`,
+              `question_id:${question_id}page:${page}`,
               300, //Holds in cache for 5 min.
-              JSON.stringify(returnDoc)
+              JSON.stringify(filteredDoc)
             );
-            cb(null, returnDoc);
+            cb(null, filteredDoc);
           } else {
+            const returnDoc = {
+              question: question_id,
+              page: Number(page),
+              count: Number(count),
+              results: [],
+            };
             redisClient.SETEX(
-              `question_id:${question_id}`,
+              `question_id:${question_id}page:${page}`,
               300, //Holds in cache for 5 min.
               JSON.stringify(returnDoc)
             );
