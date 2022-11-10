@@ -5,7 +5,6 @@ module.exports = {
       product_id: _id,
       results: [],
     };
-    console.log(page, typeof page, count, typeof count);
     const start = (page - 1) * count;
     const end = (page - 1) * count + count;
     for (let i = start; i < end; i++) {
