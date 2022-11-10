@@ -1,6 +1,9 @@
 const { createClient } = require('redis');
+require('dotenv').config();
 
-const redisClient = createClient();
+const { REDISPW } = process.env;
+
+const redisClient = createClient(`redis://sdcuser:${REDISPW}@172.31.94.95:6379`);
 redisClient.connect();
 
 redisClient.on('error', (err) => {
