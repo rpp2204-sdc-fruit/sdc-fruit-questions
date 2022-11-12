@@ -6,6 +6,7 @@ const loadBalancer = express();
 const servers = [
   'http://44.202.110.253:3002',
   'http://3.85.20.248:3002',
+  'http://54.172.131.77:3002',
 ];
 
 let current = 0;
