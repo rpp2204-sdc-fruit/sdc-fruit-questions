@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const { REDISPW } = process.env;
 
-const redisClient = createClient(`redis://sdcuser:${REDISPW}@172.31.94.95:6379`);
+const redisClient = createClient(`redis://sdcuser:${REDISPW}@3.92.229.156:6379`);
 redisClient.connect();
 
 redisClient.on('error', (err) => {

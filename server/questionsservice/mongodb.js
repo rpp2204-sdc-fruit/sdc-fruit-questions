@@ -4,7 +4,8 @@ require('dotenv').config();
 const { Schema } = mongoose;
 const { MONGOPW } = process.env;
 
-mongoose.connect(`mongodb://admin:${MONGOPW}@50.19.20.225:27017/sdc?authSource=admin`);
+// mongoose.connect(`mongodb://admin:${MONGOPW}@50.19.20.225:27017/sdc?authSource=admin`);
+mongoose.connect(`mongodb://localhost:27017/sdc`);
 const con = mongoose.connection;
 con.on('connected', () => {
   console.log('MongoDB connected!');
